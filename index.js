@@ -1,15 +1,14 @@
 const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
+require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// NÃO deixe essa chave no código em produção. Use variável de ambiente!
-const PAGARME_API_KEY = 'sk_test_9d8a6e3d1c3a407498cebf235de28177';
+app.use(cors());
+app.use(express.json());
 
-app.use(cors()); // permite CORS
-app.use(express.json()); // aceita JSON do body
 
 app.post('/api/pagarme/orders', async (req, res) => {
   try {
