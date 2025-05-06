@@ -12,12 +12,13 @@ app.use(express.json());
 
 app.post('/api/pagarme/orders', async (req, res) => {
   try {
+    const pagarmeKey = process.env.PAGARME_API_KEY;
     const response = await axios.post(
       'https://api.pagar.me/core/v5/orders',
       req.body,
       {
         headers: {
-          'Authorization': 'Basic ' + Buffer.from(`${PAGARME_API_KEY}:`).toString('base64'),
+          'Authorization': 'Basic ' + Buffer.from(`${pagarmeKey}:`).toString('base64'),
           'Content-Type': 'application/json'
         }
       }
@@ -32,11 +33,12 @@ app.post('/api/pagarme/orders', async (req, res) => {
 app.get('/api/pagarme/orders', async (req, res) => {
   try {
     const { order_id } = req.query;
+    const pagarmeKey = process.env.PAGARME_API_KEY;
     const response = await axios.get(
       'https://api.pagar.me/core/v5/orders'+`/${order_id}`,
       {
         headers: {
-          'Authorization': 'Basic ' + Buffer.from(`${PAGARME_API_KEY}:`).toString('base64'),
+          'Authorization': 'Basic ' + Buffer.from(`${pagarmeKey}:`).toString('base64'),
           'Content-Type': 'application/json'
         }
       }
