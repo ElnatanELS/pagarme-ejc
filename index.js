@@ -2,6 +2,15 @@ const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
 require('dotenv').config();
+const serviceAccount = require('./serviceAccountKey.json');
+const admin = require('firebase-admin');
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
+
+const db = admin.firestore();
+
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -51,18 +60,45 @@ app.get('/api/pagarme/orders', async (req, res) => {
   }
 });
 
-app.post('/webhook/pagarme', (req, res) => {
-  const evento = req.body;
+app.post('/webhook/pagarme', async (req, res) => {
+   try {
+    const evento = req.body;
 
-  console.log('Webhook recebido:', evento);
+    console.log('📩 Webhook recebido:', evento);
 
-  // Verifique o status do pagamento aqui
-  if (evento.current_status === 'paid') {
-    console.log('💰 Pagamento confirmado!');
-    // Atualize a base de dados, envie e-mail, etc.
+    const status = evento.current_status;
+    const transactionId = evento.data?.id;
+
+    if (!transactionId) {
+      return res.status(400).send('ID de transação ausente');
+    }
+
+    // Encontre o registro correspondente pelo ID de pagamento
+    const snapshot = await db.collection('registrations')
+      .where('pagamento.id', '==', transactionId)
+      .limit(1)
+      .get();
+
+    if (snapshot.empty) {
+      console.warn('❌ Nenhuma inscrição encontrada para o ID:', transactionId);
+      return res.status(404).send('Inscrição não encontrada');
+    }
+
+    const docRef = snapshot.docs[0].ref;
+
+    // Atualiza o status do pagamento
+    await docRef.update({
+      'pagamento.status': status,
+      updatedAt: new Date()
+    });
+
+    console.log(`✅ Status de pagamento atualizado para '${status}'`);
+
+    res.status(200).send('OK');
+  } catch (error) {
+    console.error('Erro ao processar webhook:', error);
+    res.status(500).send('Erro no servidor');
   }
-
-  res.status(200).send('OK');
 });
 
 app.listen(PORT, () => {
