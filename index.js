@@ -6,7 +6,11 @@ const serviceAccount = require('./serviceAccountKey.json');
 const admin = require('firebase-admin');
 
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
+  credential: admin.credential.cert({
+    project_id: process.env.FB_PROJECT_ID,
+    client_email: process.env.FB_CLIENT_EMAIL,
+    private_key: process.env.FB_PRIVATE_KEY?.replace(/\\n/g, '\n'), // Corrige as quebras de linha
+  }),
 });
 
 const db = admin.firestore();
@@ -66,7 +70,7 @@ app.post('/webhook/pagarme', async (req, res) => {
 
     console.log('📩 Webhook recebido:', evento);
 
-    const status = evento.current_status;
+    const status = evento.data?.status;
     const transactionId = evento.data?.id;
 
     if (!transactionId) {
@@ -89,6 +93,7 @@ app.post('/webhook/pagarme', async (req, res) => {
     // Atualiza o status do pagamento
     await docRef.update({
       'pagamento.status': status,
+      
       updatedAt: new Date()
     });
 
