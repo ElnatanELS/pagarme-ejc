@@ -51,6 +51,20 @@ app.get('/api/pagarme/orders', async (req, res) => {
   }
 });
 
+app.post('/webhook/pagarme', (req, res) => {
+  const evento = req.body;
+
+  console.log('Webhook recebido:', evento);
+
+  // Verifique o status do pagamento aqui
+  if (evento.current_status === 'paid') {
+    console.log('💰 Pagamento confirmado!');
+    // Atualize a base de dados, envie e-mail, etc.
+  }
+
+  res.status(200).send('OK');
+});
+
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
 });
