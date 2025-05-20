@@ -73,7 +73,7 @@ app.post('/webhook/pagarme', async (req, res) => {
     const status = evento.data?.status;
     const transactionId = evento.data?.id;
     const item = evento.data?.items[0];
-    console.log(`✅Item ==> '${item?.id}'`);
+    console.log(`✅Item ==> '${item?.code}'`);
 
     if (!transactionId) {
       return res.status(400).send('ID de transação ausente');
