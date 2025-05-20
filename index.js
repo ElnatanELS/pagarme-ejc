@@ -72,10 +72,14 @@ app.post('/webhook/pagarme', async (req, res) => {
 
     const status = evento.data?.status;
     const transactionId = evento.data?.id;
+    const item = evento.data?.items[0];
+    console.log(`✅Item ==> '${item?.id}'`);
 
     if (!transactionId) {
       return res.status(400).send('ID de transação ausente');
     }
+
+    if (item?.code === '1') {
 
     // Encontre o registro correspondente pelo ID de pagamento
     const snapshot = await db.collection('registrations')
@@ -97,7 +101,32 @@ app.post('/webhook/pagarme', async (req, res) => {
       updatedAt: new Date()
     });
 
-    console.log(`✅ Status de pagamento atualizado para '${status}'`);
+    console.log(`✅ Status de pagamento atualizado para '${status}'`);}
+    else if (item?.code === '2') {
+      // Encontre o registro correspondente pelo ID de pagamento
+      const snapshot = await db.collection('finders')
+        .where('pagamento.id', '==', transactionId)
+        .limit(1)
+        .get();
+
+      if (snapshot.empty) {
+        console.warn('❌ Nenhuma inscrição encontrada para o ID:', transactionId);
+        return res.status(404).send('Inscrição não encontrada');
+      }
+
+      const docRef = snapshot.docs[0].ref;
+
+      // Atualiza o status do pagamento
+      await docRef.update({
+        'pagamento.status': status,
+        album:true,
+        tipoPagamento: 'pix',
+        
+        updatedAt: new Date()
+      });
+
+      console.log(`✅ Status de pagamento atualizado para '${status}'`);
+    }
 
     res.status(200).send('OK');
   } catch (error) {
