@@ -116,14 +116,21 @@ app.post('/webhook/pagarme', async (req, res) => {
 
       const docRef = snapshot.docs[0].ref;
 
-      // Atualiza o status do pagamento
-      await docRef.update({
+      let atualizacao ={
         'pagamento.status': status,
-        album:true,
-        tipoPagamento: 'pix',
-        
         updatedAt: new Date()
-      });
+      }
+      if (status === 'paid') {
+        atualizacao = {
+          ...atualizacao,
+          'pagamento.status': status,
+          album:true,
+          tipoPagamento: 'pix',
+        }
+      }
+
+      // Atualiza o status do pagamento
+      await docRef.update(atualizacao);
 
       console.log(`✅ Status de pagamento atualizado para '${status}'`);
     }
